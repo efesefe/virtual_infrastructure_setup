@@ -1,0 +1,106 @@
+---
+
+- name: gather facts
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: gather apt facts
+      package_facts:
+        manager: apt
+
+- name: virtualbox
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: install virtualbox if absent
+      when: '"virtualbox-7.0" not in ansible_facts.packages'
+      block:
+        - name: check setup folder
+          stat:
+            path: ./setup/
+          register: setup_folder
+        - name: create setup folder
+          when: not setup_folder.stat.exists
+          local_action:
+            module: shell
+            _raw_params: mkdir setup
+        - name: check virtualbox deb file
+          stat:
+            path: ./setup/virtualbox-7.0_7.0.10-158379~Ubuntu~jammy_amd64.deb
+          register: vbox_setup_deb
+        - name: install vbox setup file
+          when: not vbox_setup_deb.stat.exists
+          local_action:
+            module: shell
+            _raw_params: cd setup && curl -O https://download.virtualbox.org/virtualbox/7.0.10/virtualbox-7.0_7.0.10-158379~Ubuntu~jammy_amd64.deb
+        - name: install vbox deb
+          local_action:
+            module: shell
+            _raw_params: apt install -y `pwd`/setup/virtualbox-7.0_7.0.10-158379~Ubuntu~jammy_amd64.deb
+
+
+- name: vagrant
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: install vagrant if absent
+      when: '"vagrant" not in ansible_facts.packages'
+      block:
+        - name: check setup folder
+          stat:
+            path: ./setup/
+          register: setup_folder
+        - name: create setup folder
+          when: not setup_folder.stat.exists
+          local_action:
+            module: shell
+            _raw_params: mkdir setup
+        - name: check vagrant deb file
+          stat:
+            path: ./setup/vagrant_2.3.7-1_i686.deb
+          register: vagrant_setup_deb
+        - name: install vagrant setup file
+          when: not vagrant_setup_deb.stat.exists
+          local_action:
+            module: shell
+            _raw_params: cd setup && curl -O https://releases.hashicorp.com/vagrant/2.3.7/vagrant_2.3.7-1_i686.deb
+        - name: install vagrant deb
+          local_action:
+            module: shell
+            _raw_params: apt install -y `pwd`/setup/vagrant_2.3.7-1_i686.deb
+
+- name: virtual machines
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: vagrant up
+      local_action:
+        module: shell
+        _raw_params: cd vagrant && vagrant up
+
+          #- name: Check if hello-world exists
+          #  hosts: 127.0.0.1
+          #  connection: local
+          #  tasks:
+          #    - name: where is hello-world
+          #      stat:
+          #        path: ./hello-world
+          #      register: file_status
+          #
+          #- name: printing status
+          #  hosts: 127.0.0.1
+          #  connection: local
+          #  tasks:
+          #  - name: print file status
+          #    debug:
+          #      var: file_status.stat.exists
+          #
+          #- name: a play that runs entirely on the ansible host
+          #  hosts: 127.0.0.1
+          #  connection: local
+          #  tasks:
+          #  - name: list
+          #    when: file_status.stat.exists == false
+          #    local_action:
+          #      module: shell
+          #      _raw_params: echo "mytext" > hello-world

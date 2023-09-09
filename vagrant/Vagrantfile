@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "Server-1" do |server1|
+      server1.vm.hostname = "Server-1"
+      server1.vm.box = "ubuntu/trusty64"
+      server1.vm.network "private_network", ip: "192.168.56.50"
+  end
+
+
+  config.vm.define "Server-2" do |server2|
+      server2.vm.hostname = "Server-2"
+      server2.vm.box = "ubuntu/trusty64"
+      server2.vm.network "private_network", ip: "192.168.56.51"
+  end
+
+
+  config.vm.define "Server-3" do |server3|
+      server3.vm.hostname = "Server-3"
+      server3.vm.box = "ubuntu/trusty64"
+      server3.vm.network "private_network", ip: "192.168.56.52"
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.memory = "1024"
+  end
+end
