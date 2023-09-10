@@ -107,9 +107,44 @@
           state: restarted
 
 
-            #    - name: Retrieve initialAdminPassword file
-            #      fetch:
-            #        src: /var/lib/jenkins/secrets/initialAdminPassword
-            #        dest: "{{ playbook_dir }}/initialAdminPassword"
-            #        flat: yes
+    - name: Add an apt signing key for Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add apt repository for stable version
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+        state: present
+
+    - name: Install docker and its dependecies
+      apt: 
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+        - docker.io
+      notify:
+        - docker status
+
+    - name: Add vagrant user to docker group
+      user:
+        name: vagrant
+        group: docker
+
+    - name: Create Docker Registry
+      docker_container:
+        name: registry
+        image: registry:2
+        state: started
+        restart_policy: unless-stopped
+        volumes:
+          - /etc/docker/registry:/var/lib/registry
+        published_ports:
+          - "5000:5000"
+
+  handlers:
+    - name: docker status
+      service: name=docker state=started
 

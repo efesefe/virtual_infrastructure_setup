@@ -73,19 +73,19 @@
   hosts: 127.0.0.1
   connection: local
   tasks:
-    - name: vagrant up
+    - name: vagrant up --provision
       local_action:
         module: shell
-        _raw_params: cd k8s && vagrant up
+        _raw_params: cd k8s && vagrant up --provision
 
 - name: Jenkins and Docker repo machine
   hosts: 127.0.0.1
   connection: local
   tasks:
-    - name: vagrant up
+    - name: vagrant up --provision
       local_action:
         module: shell
-        _raw_params: cd j-repo && vagrant up
+        _raw_params: cd j-repo && vagrant up --provision
 
 
           #- name: Check if hello-world exists

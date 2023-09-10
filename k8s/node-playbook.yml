@@ -75,23 +75,32 @@
         - kubeadm 
         - kubectl
 
+  - name: Check kubelet.conf file exists.
+    stat:
+      path: /etc/kubernetes/kubelet.conf
+    register: k8s_conf
+
   - name: Configure node ip
     lineinfile:
       path: /etc/default/kubelet
       line: KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}
       create: yes
+    when: not k8s_conf.stat.exists
 
   - name: Restart kubelet
     service:
       name: kubelet
       daemon_reload: yes
       state: restarted
+    when: not k8s_conf.stat.exists
 
   - name: Copy the join command to server location
     copy: src=join-command dest=/tmp/join-command.sh mode=0777
+    when: not k8s_conf.stat.exists
 
   - name: Join the node to cluster
     command: sh /tmp/join-command.sh
+    when: not k8s_conf.stat.exists
 
   handlers:
     - name: docker status
