@@ -40,6 +40,14 @@
     user:
       name: vagrant
       group: docker
+
+  - name: Enable insecure registry
+    lineinfile:
+      dest: /etc/docker/daemon.json
+      create: true
+      line: '{
+                "insecure-registries" : ["192.168.56.62:5000"]
+            }'
  
   - name: Remove swapfile from /etc/fstab
     mount:
