@@ -1,0 +1,41 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+IMAGE_NAME = "bento/ubuntu-22.04"
+
+Vagrant.configure("2") do |config|
+  config.vm.base_mac = nil
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.memory = 2048
+    vb.cpus = 2
+  end
+
+  # Master node
+  config.vm.define "Server-1" do |server1|
+      server1.vm.box = IMAGE_NAME
+      server1.vm.hostname = "Server-1"
+      server1.vm.network "private_network", ip: "192.168.56.60"
+      server1.vm.provision "ansible" do |ansible|
+        ansible.playbook = "master-playbook.yml"
+        ansible.extra_vars = {
+          node_ip: "192.168.56.60",
+      }
+      end
+
+  end
+  
+  # Worker node
+  config.vm.define "Server-2" do |server2|
+      server2.vm.hostname = "Server-2"
+      server2.vm.box = IMAGE_NAME
+      server2.vm.network "private_network", ip: "192.168.56.61"
+      server2.vm.provision "ansible" do |ansible|
+        ansible.playbook = "kubernetes-setup/node-playbook.yml"
+        ansible.extra_vars = {
+            node_ip: "192.168.56.61",
+        }
+      end
+  end
+
+end

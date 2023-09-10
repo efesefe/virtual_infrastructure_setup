@@ -76,7 +76,7 @@
     - name: vagrant up
       local_action:
         module: shell
-        _raw_params: cd vagrant && vagrant up
+        _raw_params: cd k8s && vagrant up
 
           #- name: Check if hello-world exists
           #  hosts: 127.0.0.1
