@@ -41,14 +41,75 @@
         name: jenkins
         state: present
 
+    - name: Disable jenkins setup wizard
+      lineinfile:
+        path: /etc/default/jenkins
+        line: JAVA_ARGS="-Djenkins.install.runSetupWizard=false"
+          
+    - name: Create groovy init directory 
+      file:
+        path: /var/lib/jenkins/init.groovy.d
+        state: directory
+        mode: '0777'
+
+    - name: Place basic security script in groovy directory
+      copy:
+        src: "{{ playbook_dir }}/basic-security.groovy"
+        dest: /var/lib/jenkins/init.groovy.d/basic-security.groovy
+        mode: '0777'
+
     - name: Start Jenkins service
       service:
         name: jenkins
         state: started
         enabled: yes
 
-    - name: Retrieve initialAdminPassword file
-      fetch:
-        src: /var/lib/jenkins/secrets/initialAdminPassword
-        dest: "{{ playbook_dir }}/initialAdminPassword"
-        flat: yes
+    - name: Include wait for jenkins task
+      include_tasks: jenkins_check.yml
+
+    - name: Download Plugins script into vagrant home directory
+      copy:
+        src: "{{ playbook_dir }}/plugins.sh"
+        dest: /home/vagrant/
+        mode: '0777'
+
+    - name: Restart jenkins service 
+      service:
+          name: jenkins
+          state: restarted
+
+    - name: Include wait for jenkins task
+      include_tasks: jenkins_check.yml
+
+    - name: Download jenkins cli into vagrant home directory 
+      get_url:
+        url: http://localhost:8080/jnlpJars/jenkins-cli.jar
+        dest: /home/vagrant
+        mode: '0777'
+      retries: 5
+      delay: 5
+      register: result      
+      until: result is succeeded
+
+    - name: Run plugins scripts
+      shell: /home/vagrant/plugins.sh
+      args:
+        executable: /bin/bash
+      register: plugins_script
+
+    - name: Show installed plugins
+      debug:
+        var: plugins_script.stdout
+
+    - name: Restart jenkins service 
+      service:
+          name: jenkins
+          state: restarted
+
+
+            #    - name: Retrieve initialAdminPassword file
+            #      fetch:
+            #        src: /var/lib/jenkins/secrets/initialAdminPassword
+            #        dest: "{{ playbook_dir }}/initialAdminPassword"
+            #        flat: yes
+
