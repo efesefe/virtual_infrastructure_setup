@@ -17,12 +17,12 @@
 
   - name: Add an apt signing key for Docker
     apt_key:
-      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      url: https://download.docker.com/linux/ubuntu/gpg
       state: present
 
   - name: Add apt repository for stable version
     apt_repository:
-      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
       state: present
 
   - name: Install docker and its dependecies
@@ -33,6 +33,8 @@
     vars:
       packages:
       - docker.io
+    notify:
+      - docker status
 
   - name: Add vagrant user to docker group
     user:
@@ -87,4 +89,30 @@
       state: restarted
 
   - name: Initialize the Kubernetes cluster using kubeadm
-    command: kubeadm init --apiserver-advertise-address="192.168.56.60" --apiserver-cert-extra-sans="192.168.56.60"  --node-name vagrant --pod-network-cidr=192.168.56.0/24
+    command: kubeadm init --apiserver-advertise-address="192.168.56.60" --apiserver-cert-extra-sans="192.168.56.60" --node-name vagrant --pod-network-cidr=192.168.0.0/16
+
+  - name: Setup kubeconfig for vagrant user
+    command: "{{ item }}"
+    with_items:
+     - mkdir -p /home/vagrant/.kube
+     - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+     - chown vagrant:vagrant /home/vagrant/.kube/config
+
+  - name: Install calico pod network
+    become: false
+    command: kubectl create -f https://docs.projectcalico.org/manifests/calico.yaml
+    retries: 3
+    delay: 3
+    register: result
+    until: result.rc == 0
+
+  - name: Generate join command
+    command: kubeadm token create --print-join-command
+    register: join_command
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
+  handlers:
+    - name: docker status
+      service: name=docker state=started
