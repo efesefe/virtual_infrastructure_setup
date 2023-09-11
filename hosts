@@ -1,0 +1,8 @@
+[masters]
+master ansible_host=192.168.56.60 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+
+[workers]
+worker ansible_host=192.168.56.61 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+
+[jenkins]
+jenkins ansible_host=192.168.56.62 ansible_ssh_user=vagrant ansible_ssh_pass=vagrant

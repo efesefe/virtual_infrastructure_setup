@@ -13,7 +13,6 @@
   connection: local
   tasks:
     - name: install virtualbox if absent
-      when: '"virtualbox-7.0" not in ansible_facts.packages'
       block:
         - name: check setup folder
           stat:
@@ -38,13 +37,13 @@
             module: shell
             _raw_params: apt install -y `pwd`/setup/virtualbox-7.0_7.0.10-158379~Ubuntu~jammy_amd64.deb
 
+      when: '"virtualbox-7.0" not in ansible_facts.packages'
 
 - name: vagrant
   hosts: 127.0.0.1
   connection: local
   tasks:
     - name: install vagrant if absent
-      when: '"vagrant" not in ansible_facts.packages'
       block:
         - name: check setup folder
           stat:
@@ -69,6 +68,8 @@
             module: shell
             _raw_params: apt install -y `pwd`/setup/vagrant_2.3.7-1_i686.deb
 
+      when: '"vagrant" not in ansible_facts.packages'
+
 - name: virtual machines
   hosts: 127.0.0.1
   connection: local
@@ -87,7 +88,24 @@
         module: shell
         _raw_params: cd j-repo && vagrant up --provision
 
+- hosts: all
+  tasks:
+  - name: Generate SSH keys
+    shell: ssh-keygen -q -t rsa -f /home/vagrant/.ssh/id_rsa -N ''
+    args:
+      creates: /home/vagrant/.ssh/id_rsa
 
+  - name: Allow passwordless SSH between all hosts
+    shell: /bin/cat /home/vagrant/.ssh/id_rsa.pub
+    register: ssh_keys
+
+  - name: Allow passwordless SSH between all hosts
+    lineinfile:
+      dest: /home/vagrant/.ssh/authorized_keys
+      state: present
+      line:  " {{ hostvars[item]['ssh_keys']['stdout'] }}"
+    with_items: "{{ groups['all']}}"
+ 
           #- name: Check if hello-world exists
           #  hosts: 127.0.0.1
           #  connection: local

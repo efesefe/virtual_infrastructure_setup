@@ -1,6 +1,5 @@
 setup
 .vagrant
-hosts
 join-command
 initialAdminPassword
 

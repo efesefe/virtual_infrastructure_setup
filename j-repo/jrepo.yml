@@ -132,6 +132,11 @@
       user:
         name: vagrant
         group: docker
+        append: true
+
+    - name: Add jenkins user to docker group
+      become: true
+      shell: usermod -a -G docker jenkins
 
     - name: Create Docker Registry
       docker_container:
@@ -143,6 +148,24 @@
           - /etc/docker/registry:/var/lib/registry
         published_ports:
           - "5000:5000"
+
+    - name: Add jenkinsfile
+      copy:
+        src: "{{ playbook_dir }}/config.xml"
+        dest: /home/vagrant/config.xml
+        mode: '0777'
+
+
+    - name: Check if job exists.
+      stat:
+        path: /var/lib/jenkins/jobs/build_push_deploy/config.xml
+      register: job
+
+    - name: create jenkins jobs with xml files
+      become: true
+      when: not job.stat.exists
+      shell: "java -jar jenkins-cli.jar -s http://localhost:8080 -auth admin:admin create-job build_push_deploy < config.xml"
+      with_items: jenkins_jobs
 
   handlers:
     - name: docker status
