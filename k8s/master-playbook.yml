@@ -49,6 +49,12 @@
                 "insecure-registries" : ["192.168.56.62:5000"]
             }'
  
+  - name: Restart Docker
+    service:
+      name: docker
+      daemon_reload: yes
+      state: restarted
+
   - name: Remove swapfile from /etc/fstab
     mount:
       name: "{{ item }}"
@@ -130,6 +136,15 @@
   - name: Copy join command to local file
     local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
     when: not k8s_conf.stat.exists
+
+  - name: Check hello_world_application.yml file exists.
+    stat:
+      path: /home/vagrant/hello_world_application.yml
+    register: ishello
+
+  - name: Copy the hello_world_application.yml file
+    copy: src=hello_world_application.yml dest=/home/vagrant/hello_world_application.yml
+    when: not ishello.stat.exists
 
   handlers:
     - name: docker status

@@ -95,7 +95,7 @@
     args:
       creates: /home/vagrant/.ssh/id_rsa
 
-  - name: Allow passwordless SSH between all hosts
+  - name: Allow passwordless SSH to vms
     shell: /bin/cat /home/vagrant/.ssh/id_rsa.pub
     register: ssh_keys
 
@@ -105,30 +105,10 @@
       state: present
       line:  " {{ hostvars[item]['ssh_keys']['stdout'] }}"
     with_items: "{{ groups['all']}}"
- 
-          #- name: Check if hello-world exists
-          #  hosts: 127.0.0.1
-          #  connection: local
-          #  tasks:
-          #    - name: where is hello-world
-          #      stat:
-          #        path: ./hello-world
-          #      register: file_status
-          #
-          #- name: printing status
-          #  hosts: 127.0.0.1
-          #  connection: local
-          #  tasks:
-          #  - name: print file status
-          #    debug:
-          #      var: file_status.stat.exists
-          #
-          #- name: a play that runs entirely on the ansible host
-          #  hosts: 127.0.0.1
-          #  connection: local
-          #  tasks:
-          #  - name: list
-          #    when: file_status.stat.exists == false
-          #    local_action:
-          #      module: shell
-          #      _raw_params: echo "mytext" > hello-world
+
+- hosts: jenkins
+  become: true
+  tasks:
+  - name: copy id_rsa to somewhere jenkins can reach
+    shell: cp /home/vagrant/.ssh/id_rsa /home/ && chmod 777 id_rsa
+  

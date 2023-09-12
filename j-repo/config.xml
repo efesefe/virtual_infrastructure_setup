@@ -33,11 +33,14 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>docker build -t localhost:5000/hello-world-py .
-docker push localhost:5000/hello-world-py</command>
+      <command>docker build -t localhost:5000/hello-world-py:stable .
+docker push localhost:5000/hello-world-py:stable
+ssh -o StrictHostKeyChecking=no -i /home/id_rsa vagrant@192.168.56.60 &quot;\
+																		docker pull 192.168.56.62:5000/hello-world-py:stable &amp;&amp; \
+                                                                        kubectl apply -f /home/vagrant/hello_world_application.yml \
+																	&quot;</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
   <buildWrappers/>
-</project>
