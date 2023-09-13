@@ -44,6 +44,10 @@
         group: docker
         append: true
 
+    - name: Adding SSL
+      shell: cd /home/vagrant &&  mkdir -p certs && openssl req -new -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=192.168.56.62"
+
+
     - name: Create Docker Registry
       docker_container:
         name: registry
@@ -52,7 +56,10 @@
         restart_policy: unless-stopped
         volumes:
           - /etc/docker/registry:/var/lib/registry
-          - /home/vagrant/auth:/auth
+          - /home/vagrant/certs:/certs
+        env:
+          REGISTRY_HTTP_TLS_CERTIFICATE: "/certs/domain.crt"
+          REGISTRY_HTTP_TLS_KEY: "/certs/domain.key"
         published_ports:
           - "5000:5000"
 
