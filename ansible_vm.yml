@@ -110,5 +110,5 @@
   become: true
   tasks:
   - name: copy id_rsa to somewhere jenkins can reach
-    shell: cp /home/vagrant/.ssh/id_rsa /home/ && chmod 777 id_rsa
+    shell: cp /home/vagrant/.ssh/id_rsa /home/ && chmod 777 /home/id_rsa
   

@@ -44,3 +44,4 @@ ssh -o StrictHostKeyChecking=no -i /home/id_rsa vagrant@192.168.56.60 &quot;\
   </builders>
   <publishers/>
   <buildWrappers/>
+</project>
